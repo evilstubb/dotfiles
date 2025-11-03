@@ -30,9 +30,11 @@ fi
 [ -e "$ROOT/etc/resolv.conf" ] || touch "$ROOT/etc/resolv.conf"
 mount -o ro --bind "/etc/resolv.conf" "$ROOT/etc/resolv.conf"
 # Enter a new filesystem namespace.
+hostname devbox
 exec chroot "$ROOT" /usr/bin/env bash -c "cd \\"$(pwd)\\" && bash -i"
 EOF
 
 # Enter a new mount namespace, which avoids so many problems that come with
-# binding the host filesystem to the container tree.
-sudo --preserve-env -- unshare --mount -- "$BASH" "$TMP"
+# binding the host filesystem to the container tree. Also enter a new time
+# sharing namespace so we can change the hostname.
+sudo --preserve-env -- unshare --mount --uts -- "$BASH" "$TMP"

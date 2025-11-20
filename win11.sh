@@ -42,7 +42,8 @@ if (( "${VFIO:-}" )); then
 fi
 
 args=(
-    -mon chardev=char0,mode=readline
+    -vnc :0,password=off # no graphical QEMU
+    -chardev stdio,id=char0 -mon chardev=char0,mode=readline
     -machine q35,accel=kvm,usb=off -nodefaults -boot menu=on
     -cpu host,$(
         hyperv=(
@@ -63,7 +64,6 @@ args=(
 )
 if (( "${VFIO:-}" )); then
     args+=(
-        -chardev stdio,id=char0 -vnc :0,password=off # no graphical QEMU
         -smp 8,cores=8 -m 24G -overcommit mem-lock=on
         -device pcie-root-port,id=pcie.1,bus=pcie.0 # used by VFIO
         -device vfio-pci,host=03:00.0,bus=pcie.1,multifunction=on
@@ -76,7 +76,7 @@ if (( "${VFIO:-}" )); then
         -device usb-host,vendorid=0x3142,productid=0x0068 # microphone
     )
 else
-    args+=(-chardev vc,id=char0 -smp 4,cores=4 -m 8G)
+    args+=(-smp 4,cores=4 -m 8G)
 fi
 
 # Don't apply new shell settings to the cleanup hook.
@@ -84,5 +84,5 @@ fi
     # Print the QEMU command before executing it.
     set -x
     # The QEMU container image must already exist.
-    qemu-system-x86_64 "${args[@]}" "$@"
+    /usr/libexec/qemu-kvm "${args[@]}" "$@"
 )
